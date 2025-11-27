@@ -96,6 +96,10 @@
 
             try {
                 const response = await fetch('/api/stats');
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`Server returned ${response.status} ${response.statusText}: ${text.substring(0, 50)}...`);
+                }
                 const data = await response.json();
 
                 if (data.error) {
@@ -120,7 +124,7 @@
                 });
             } catch (error) {
                 console.error('Error fetching stats:', error);
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ff6b6b;">Error loading data: ${error.message}. <br>Please check if the database is connected.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ff6b6b;">Error: ${error.message}<br>Make sure you are using a Web Service, not a Static Site.</td></tr>`;
             }
         }
 
