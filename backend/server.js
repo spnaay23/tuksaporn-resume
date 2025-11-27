@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const cors = require('cors'); // Import cors
 const db = require('./database');
 
 const app = express();
@@ -8,6 +9,9 @@ const PORT = process.env.PORT || 3000;
 
 // Trust proxy if behind a reverse proxy (common in production, but good practice to have)
 app.set('trust proxy', 1);
+
+// Enable CORS for all routes
+app.use(cors());
 
 // DoS Prevention: Rate Limiting
 const limiter = rateLimit({
