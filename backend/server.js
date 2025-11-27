@@ -29,7 +29,7 @@ app.use((req, res, next) => {
     const ip = req.ip || req.connection.remoteAddress;
     const userAgent = req.get('User-Agent');
 
-    db.run(`INSERT INTO visits (ip, user_agent) VALUES (?, ?)`, [ip, userAgent], (err) => {
+    db.query(`INSERT INTO visits (ip, user_agent) VALUES ($1, $2)`, [ip, userAgent], (err) => {
         if (err) {
             console.error('Error logging visit:', err);
         }
@@ -39,18 +39,19 @@ app.use((req, res, next) => {
 });
 
 // Serve static files
-app.use(express.static(path.join(__dirname)));
+// Serve static files from the frontend directory
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // API to get stats
 app.get('/api/stats', (req, res) => {
-    db.all(`SELECT * FROM visits ORDER BY timestamp DESC LIMIT 50`, [], (err, rows) => {
+    db.query(`SELECT * FROM visits ORDER BY timestamp DESC LIMIT 50`, [], (err, result) => {
         if (err) {
             res.status(500).json({ error: err.message });
             return;
         }
         res.json({
-            total_visits: rows.length, // This is just count of fetched rows, for total count we'd need another query
-            recent_visits: rows
+            total_visits: result.rows.length, // This is just count of fetched rows, for total count we'd need another query
+            recent_visits: result.rows
         });
     });
 });

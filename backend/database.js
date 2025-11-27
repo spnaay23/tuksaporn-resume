@@ -1,22 +1,30 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const { Pool } = require('pg');
 
-const dbPath = path.resolve(__dirname, 'visitors.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('Could not connect to database', err);
-    } else {
-        console.log('Connected to SQLite database');
+// Use DATABASE_URL from environment variables
+// Default to a local connection string if not provided (for local testing)
+const connectionString = process.env.DATABASE_URL || 'postgresql://localhost:5432/visitors_db';
+
+const pool = new Pool({
+    connectionString: connectionString,
+    // SSL is usually required for cloud deployments like Render
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+// Initialize database table
+const initDb = async () => {
+    try {
+        await pool.query(`CREATE TABLE IF NOT EXISTS visits (
+            id SERIAL PRIMARY KEY,
+            ip TEXT,
+            user_agent TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+        console.log('Connected to PostgreSQL and ensured table exists');
+    } catch (err) {
+        console.error('Error initializing database:', err);
     }
-});
+};
 
-db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS visits (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ip TEXT,
-        user_agent TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-});
+initDb();
 
-module.exports = db;
+module.exports = pool;
